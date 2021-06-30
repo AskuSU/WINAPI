@@ -1,12 +1,7 @@
-﻿
-#include <shobjidl.h>
-#include <atlbase.h>
-#include <d2d1.h>
-#pragma comment(lib, "d2d1")
+﻿#include <atlbase.h>
 
 #include "framework.h"
 #include "main.h"
-
 
 #define MAX_LOADSTRING 100
 
@@ -320,11 +315,18 @@ INT_PTR CALLBACK OpenTestWindow(
     ShowWindow(testWin.Window(), nCmdShow);
 
     MSG msg = { };
-    while (GetMessage(&msg, NULL, 0, 0))
+    //while (GetMessage(&msg, NULL, 0, 0))
+    while (msg.message != WM_QUIT)
     {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+            continue;
+        }
+        testWin.WaitTimer();
+        
     }
-
+    CoUninitialize();
     return 0;
 }

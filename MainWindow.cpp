@@ -9,9 +9,36 @@ template <class T> void SafeRelease(T** ppT)
     }
 }
 
+#pragma warning(disable : 4996)
+class DPIScale
+{
+    static float scaleX;
+    static float scaleY;
+
+public:
+    static void Initialize(ID2D1Factory* pFactory)
+    {
+        FLOAT dpiX, dpiY;
+        pFactory->GetDesktopDpi(&dpiX, &dpiY);
+        scaleX = dpiX / 96.0f;
+        scaleY = dpiY / 96.0f;
+    }
+
+    template <typename T>
+    static D2D1_POINT_2F PixelsToDips(T x, T y)
+    {
+        return D2D1::Point2F(static_cast<float>(x) / scaleX, static_cast<float>(y) / scaleY);
+    }
+};
+
+float DPIScale::scaleX = 1.0f;
+float DPIScale::scaleY = 1.0f;
+
+
 // Пересчет макета чертежа при изменении размера окна.
 void MainWindow::CalculateLayout()
 {
+    
     if (pRenderTarget != NULL)
     {
         D2D1_SIZE_F size = pRenderTarget->GetSize();
@@ -41,6 +68,7 @@ void MainWindow::CalculateLayout()
             Ticks[i * 2 + 1] = mat.TransformPoint(pt2);
         }
     }
+    
 }
 
 HRESULT MainWindow::CreateGraphicsResources()
@@ -153,6 +181,36 @@ void MainWindow::RenderScene()
     pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
 }
 
+void MainWindow::OnLButtonDown(int pixelX, int pixelY, DWORD flags)
+{
+    SetCapture(m_hWnd);
+    ellipse.point = ptMouse = DPIScale::PixelsToDips(pixelX, pixelY);
+    ellipse.radiusX = ellipse.radiusY = 1.0f;
+    InvalidateRect(m_hWnd, NULL, FALSE);
+}
+
+void MainWindow::OnLButtonUp()
+{
+    ReleaseCapture();
+}
+
+void MainWindow::OnMouseMove(int pixelX, int pixelY, DWORD flags)
+{
+    if (flags & MK_LBUTTON)
+    {
+        const D2D1_POINT_2F dips = DPIScale::PixelsToDips(pixelX, pixelY);
+
+        const float width = (dips.x - ptMouse.x) / 2;
+        const float height = (dips.y - ptMouse.y) / 2;
+        const float x1 = ptMouse.x + width;
+        const float y1 = ptMouse.y + height;
+
+        ellipse = D2D1::Ellipse(D2D1::Point2F(x1, y1), width, height);
+
+        InvalidateRect(m_hWnd, NULL, FALSE);
+    }
+}
+
 void MainWindow::Resize()
 {
     if (pRenderTarget != NULL)
@@ -174,11 +232,20 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
     case WM_CREATE:
+        
         if (FAILED(D2D1CreateFactory(
             D2D1_FACTORY_TYPE_SINGLE_THREADED, &pFactory)) || !InitializeTimer())
         {
             return -1;  // Fail CreateWindowEx.
         }
+        //return 0;
+        
+        if (FAILED(D2D1CreateFactory(
+            D2D1_FACTORY_TYPE_SINGLE_THREADED, &pFactory)))
+        {
+            return -1;  // Fail CreateWindowEx.
+        }
+        DPIScale::Initialize(pFactory);
         return 0;
 
     case WM_DESTROY:
@@ -199,6 +266,18 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     case WM_SIZE:
         Resize();
+        return 0;
+
+    case WM_LBUTTONDOWN:
+        OnLButtonDown(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), (DWORD)wParam);
+        return 0;
+
+    case WM_LBUTTONUP:
+        OnLButtonUp();
+        return 0;
+
+    case WM_MOUSEMOVE:
+        OnMouseMove(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), (DWORD)wParam);
         return 0;
 
     default:

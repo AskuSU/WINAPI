@@ -2,6 +2,7 @@
 #include"basewin.h"
 #include <d2d1.h>
 #pragma comment(lib, "d2d1")
+#include<WindowsX.h>
 
 template <class T> void SafeRelease(T**);
 
@@ -13,6 +14,7 @@ class MainWindow : public BaseWindow<MainWindow>
     D2D1_ELLIPSE            ellipse;
     D2D_POINT_2F            Ticks[24];
     HANDLE                  hTimer;
+    D2D_POINT_2F            ptMouse;
 
     float g_DPIScaleX = 1.0f;
     float g_DPIScaleY = 1.0f;
@@ -25,9 +27,15 @@ class MainWindow : public BaseWindow<MainWindow>
     void    DrawClockHand(float fHandLength, float fAngle, float fStrokeWidth);
     void    RenderScene();
 
+    void    OnLButtonDown(int pixelX, int pixelY, DWORD flags);
+    void    OnLButtonUp();
+    void    OnMouseMove(int pixelX, int pixelY, DWORD flags);
+
 public:   
 
-    MainWindow() : pFactory(NULL), pRenderTarget(NULL), pBrush(NULL)
+    MainWindow() : pFactory(NULL), pRenderTarget(NULL), pBrush(NULL),
+        ellipse(D2D1::Ellipse(D2D1::Point2F(), 0, 0)),
+        ptMouse(D2D1::Point2F())
     {
     }
 

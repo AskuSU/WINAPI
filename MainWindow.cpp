@@ -228,7 +228,7 @@ void MainWindow::Resize()
 
 
 LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
+{    
     switch (uMsg)
     {
     case WM_CREATE:
@@ -269,6 +269,13 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
         return 0;
 
     case WM_LBUTTONDOWN:
+        /*//Используется для перетаскивания объекта(от случайнорго перетаскивания в место нажатия)
+        POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+        if (DragDetect(m_hWnd, pt))
+        {
+            // Start dragging.
+        }
+        */
         OnLButtonDown(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), (DWORD)wParam);
         return 0;
 
@@ -278,6 +285,33 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     case WM_MOUSEMOVE:
         OnMouseMove(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), (DWORD)wParam);
+        return 0;
+    
+    case WM_COMMAND: //Команды из таблицы ресурсы
+        switch (LOWORD(wParam))
+        {
+        case ID_DRAW_MODE:
+            //SetMode(DrawMode);
+            OutputDebugString(L"DRAW MODE\n");
+            break;
+
+        case ID_SELECT_MODE:
+            //SetMode(SelectMode);
+            OutputDebugString(L"SELECT MODE\n");
+            break;
+
+        case ID_TOGGLE_MODE:
+            OutputDebugString(L"TOGGLE MODE\n");
+            /*if (mode == DrawMode)
+            {
+                SetMode(SelectMode);
+            }
+            else
+            {
+                SetMode(DrawMode);
+            }*/
+            break;
+        }
         return 0;
 
     default:

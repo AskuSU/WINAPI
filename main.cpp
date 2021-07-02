@@ -314,15 +314,18 @@ INT_PTR CALLBACK OpenTestWindow(
 
     ShowWindow(testWin.Window(), nCmdShow);
 
+    HACCEL hAccel = LoadAccelerators(hInst, MAKEINTRESOURCE(IDR_ACCEL1));
+
     MSG msg = { };
-    //while (GetMessage(&msg, NULL, 0, 0))
-    while (msg.message != WM_QUIT)
+    while (GetMessage(&msg, NULL, 0, 0))
+    //while (msg.message != WM_QUIT)
     {
-        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+        //if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+        if (!TranslateAccelerator(testWin.Window(), hAccel, &msg))
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
-            continue;
+            //continue;
         }
         testWin.WaitTimer();
         

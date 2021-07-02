@@ -3,6 +3,8 @@
 #include <d2d1.h>
 #pragma comment(lib, "d2d1")
 #include<WindowsX.h>
+#include"resource.h"
+
 
 template <class T> void SafeRelease(T**);
 
